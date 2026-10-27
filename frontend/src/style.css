@@ -1,39 +1,51 @@
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: #f5f5f5;
-  color: #222;
-  font-family: Arial, sans-serif;
-}
-
-#app {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
-}
-
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-}
-
-#image-container {
-  padding: 16px;
-  overflow: auto;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+#image-stage {
+  position: relative;
 }
 
 #screenshot {
-  width: 100%;
-  height: auto;
+  cursor: crosshair;
 }
 
-#screenshot:not([hidden]) {
+#markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.comment-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: #175cd3;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#comment-form {
+  margin-top: 20px;
+}
+
+textarea {
   display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 10px;
+  font: inherit;
+}
+
+button {
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+#comment-list li {
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
