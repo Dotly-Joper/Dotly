@@ -206,6 +206,15 @@ Svar: 200 med den uppdaterade `ReviewComment`. Fel: 400 vid annan status, 404 om
 - `GET /screenshots/<reviewId>.png`: skärmbilden, serverad med `express.static`. En bild som saknas ger Express vanliga 404, inte felformatet.
 - `GET /test-site/`: en egen testsida för pilottestet (byggs senare).
 
+## Begränsningar
+
+- Utan konton kan alla som når servern lista projekt och granskningar. Servern körs bara lokalt.
+- Startas servern om medan en skärmbild tas, stannar granskningen i `pending`.
+- Servern kontrollerar inte att en granskning är `ready` innan en kommentar sparas. Kundvyn visar bara formuläret när status är `ready`.
+- Servern får besöka interna adresser som `localhost`, vilket krävs för testsidan. Vid publicering skulle det vara en säkerhetsrisk (SSRF).
+
+## Sammanfattning
+
 | Metod | Sökväg | Lyckad statuskod | Möjliga felkoder |
 | --- | --- | --- | --- |
 | `POST` | `/api/projects` | 201 | 400 |
@@ -216,3 +225,5 @@ Svar: 200 med den uppdaterade `ReviewComment`. Fel: 400 vid annan status, 404 om
 | `GET` | `/api/reviews/:reviewId/comments` | 200 | 404 |
 | `POST` | `/api/reviews/:reviewId/comments` | 201 | 400, 404 |
 | `PATCH` | `/api/comments/:commentId` | 200 | 400, 404 |
+
+Alla endpoints kan även svara 500 `INTERNAL`.
