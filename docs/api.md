@@ -2,7 +2,8 @@
 
 ## Översikt
 
-- Servern körs på `http://localhost:3000`. Frontenden (Vite, port 5173) anropar `/api/...` via Vite-proxyn.
+- Servern körs på `http://localhost:3000`. Frontenden (Vite, port 5173) anropar relativa sökvägar, och Vite-proxyn vidarebefordrar `/api` och `/screenshots` till servern.
+- `/test-site/` proxas inte. Den öppnas direkt på `http://localhost:3000/test-site/`, både av Playwright och vid pilottestet.
 - Alla request- och response-bodys i API:et är JSON.
 - Id skapas av servern med `crypto.randomUUID()`. Datum är ISO 8601-strängar.
 - Det finns inga konton. Granskningen delas med en hemlig länk `/?review=<reviewId>`.
@@ -44,7 +45,7 @@ export interface ReviewComment {
 
 - `imageUrl` finns bara när `status` är `"ready"` och har formen `/screenshots/<reviewId>.png`.
 - `errorMessage` finns bara när `status` är `"failed"`.
-- `x` och `y` är andelar av skärmbildens storlek, inte av webbläsarfönstret.
+- `x` och `y` är andelar av skärmbildens egen storlek, inte av webbläsarfönstret. För att en markör ska hamna rätt måste frontenden placera markörerna mot en yta som är exakt lika stor som bilden. I nuvarande kod räknas klicket mot bilden, men markörerna placeras mot `#image-stage`, som kan vara bredare än bilden. Det är den kända zoombuggen, och den åtgärdas i frontenden.
 
 ## Felformat
 
@@ -65,6 +66,18 @@ Alla fel har samma form. `details` finns bara vid `VALIDATION_ERROR`.
 - `INTERNAL` → 500. Alla endpoints kan svara med det här felet. Felet loggas på servern och meddelandet är generellt.
 
 Valideringen görs före kontrollen av att resursen finns, så 400 vinner över 404. Okända fält i en body ignoreras (Zods standard). Texterna i `message` är exempel.
+
+Vid ogiltig JSON är `details` en tom lista:
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request-bodyn är inte giltig JSON.",
+    "details": []
+  }
+}
+```
 
 ## Endpoints
 
@@ -178,7 +191,7 @@ Svar: 200 med den uppdaterade `ReviewComment`. Fel: 400 vid annan status, 404 om
 
 ## Statiska filer
 
-- `GET /screenshots/<reviewId>.png`: skärmbilden, serverad med `express.static`.
+- `GET /screenshots/<reviewId>.png`: skärmbilden, serverad med `express.static`. En bild som saknas ger Express vanliga 404, inte felformatet.
 - `GET /test-site/`: en egen testsida för pilottestet (byggs senare).
 
 | Metod | Sökväg | Lyckad statuskod | Möjliga felkoder |
