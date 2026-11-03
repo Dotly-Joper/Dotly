@@ -60,9 +60,11 @@ Alla fel har samma form. `details` finns bara vid `VALIDATION_ERROR`.
 }
 ```
 
-- `VALIDATION_ERROR` → 400. `details` är listan med Zods `issues`.
-- `NOT_FOUND` → 404.
-- `INTERNAL` → 500. Felet loggas på servern och meddelandet är generellt.
+- `VALIDATION_ERROR` → 400. `details` är listan med Zods `issues`, med bara `path` och `message` för varje fel. Ogiltig JSON i en body ger också det här felet.
+- `NOT_FOUND` → 404. Ett id som inte finns ger 404, oavsett format. Okända sökvägar under `/api` ger också det här felet.
+- `INTERNAL` → 500. Alla endpoints kan svara med det här felet. Felet loggas på servern och meddelandet är generellt.
+
+Valideringen görs före kontrollen av att resursen finns, så 400 vinner över 404. Okända fält i en body ignoreras (Zods standard). Texterna i `message` är exempel.
 
 ## Endpoints
 
@@ -88,7 +90,7 @@ Fel: 400 om `name` är ogiltigt.
 
 ### GET /api/projects
 
-Hämtar alla projekt, nyaste först. Svar: 200 med `Project[]`. Fel: Inga specifika fel.
+Hämtar alla projekt, nyaste först. Svar: 200 med `Project[]`. Fel: Inga utöver 500 `INTERNAL`.
 
 ### POST /api/projects/:projectId/reviews
 
