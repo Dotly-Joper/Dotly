@@ -113,11 +113,11 @@ Skapar en granskning och tar en skärmbild. Body: `url`, giltig URL, bara `http:
 { "url": "https://example.com/pricing" }
 ```
 
-Granskningen sparas först som `pending`. Sedan tar servern skärmbilden med Playwright, sparar den som `screenshots/<reviewId>.png` och sätter status `ready`. Anropet kan ta flera sekunder, eftersom servern väntar på skärmbilden.
+Granskningen sparas först som `pending`. Sedan tar servern skärmbilden med Playwright, sparar den som `screenshots/<reviewId>.png` och sätter status `ready`. Anropet kan ta upp till cirka 30 sekunder, eftersom servern väntar på skärmbilden med samma timeout som i `src/index.ts`.
 
-Misslyckas skärmbilden får granskningen status `failed` med `errorMessage`, och servern svarar ändå 201. Granskningen har skapats, och frontenden visar felet genom att läsa `status`.
+Misslyckas skärmbilden får granskningen status `failed` med `errorMessage`, och servern svarar ändå 201. Granskningen har skapats, och frontenden visar felet genom att läsa `status`. `errorMessage` är en generell svensk text. Det tekniska felet från Playwright loggas bara på servern.
 
-Svar: 201 med `Review`.
+Svar: 201 med `Review`. `url` returneras exakt som den skickades, efter trimning.
 
 ```json
 {
@@ -137,7 +137,7 @@ Svar: 201 med `Review`.
   "url": "https://does-not-exist.example.com/",
   "createdAt": "2026-11-07T10:25:00.000Z",
   "status": "failed",
-  "errorMessage": "The domain could not be found"
+  "errorMessage": "Skärmbilden kunde inte tas. Kontrollera att adressen finns och svarar."
 }
 ```
 
@@ -145,11 +145,23 @@ Fel: 400 vid ogiltig URL, 404 om projektet inte finns.
 
 ### GET /api/projects/:projectId/reviews
 
-Hämtar ett projekts granskningar, nyaste först. Svar: 200 med `Review[]`. Fel: 404 om projektet inte finns.
+Hämtar ett projekts granskningar, nyaste först. En granskning kan ha status `pending` medan skärmbilden tas, se exemplet under `GET /api/reviews/:reviewId`. Svar: 200 med `Review[]`. Fel: 404 om projektet inte finns.
 
 ### GET /api/reviews/:reviewId
 
 Hämtar en granskning. Svar: 200 med `Review`. Fel: 404 om granskningen inte finns.
+
+Granskningen kan ha status `pending` medan skärmbilden tas:
+
+```json
+{
+  "id": "d4e1a7c3-6b02-4a9f-bd57-3e8f1c6a2094",
+  "projectId": "3f2b8c1e-7a4d-4e9b-9c21-5d6f8a0b1c2d",
+  "url": "https://example.com/about",
+  "createdAt": "2026-11-07T10:40:00.000Z",
+  "status": "pending"
+}
+```
 
 ### GET /api/reviews/:reviewId/comments
 
