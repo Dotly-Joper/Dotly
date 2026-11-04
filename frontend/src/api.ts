@@ -18,5 +18,6 @@ export async function fetchJson<T>(url: string, options?: RequestInit): Promise<
 
         throw new ApiError(response.status, body.code, body.message);
     }   
+    //T describes the type for TypeScript but does not validate JSON at runtime.
     return await response.json() as T;
 }
