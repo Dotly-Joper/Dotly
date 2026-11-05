@@ -1,4 +1,5 @@
 import "./style.css";
+import { getElement } from "./dom";
 
 type ReviewComment = {
   id: number;
@@ -7,15 +8,7 @@ type ReviewComment = {
   y: number;
 };
 
-function getElement<T extends HTMLElement>(selector: string): T {
-  const element = document.querySelector<T>(selector);
 
-  if (!element) {
-    throw new Error(`Element not found: ${selector}`);
-  }
-
-  return element;
-}
 
 const app = getElement<HTMLDivElement>("#app");
 
