@@ -9,6 +9,7 @@ import {
   getProject,
   getReview,
   listProjects,
+  listReviews,
   markReviewFailed,
   markReviewReady,
 } from "./repository.ts";
@@ -85,6 +86,34 @@ app.post(
     }
 
     res.status(201).json(getReview(db, review.id));
+  },
+);
+
+app.get(
+  "/api/projects/:projectId/reviews",
+  (req: Request<{ projectId: string }>, res: Response) => {
+    const { projectId } = req.params;
+
+    if (!getProject(db, projectId)) {
+      sendNotFound(res, "Project not found");
+      return;
+    }
+
+    res.json(listReviews(db, projectId));
+  },
+);
+
+app.get(
+  "/api/reviews/:reviewId",
+  (req: Request<{ reviewId: string }>, res: Response) => {
+    const review = getReview(db, req.params.reviewId);
+
+    if (!review) {
+      sendNotFound(res, "Review not found");
+      return;
+    }
+
+    res.json(review);
   },
 );
 
