@@ -50,15 +50,7 @@ npm run dev
 
 Open the local URL shown in the terminal.
 
-The start page shows the developer view with hardcoded example projects and reviews.
-It includes ready, pending, and failed reviews, plus a project with no reviews.
-Click "Open review" on a ready review to open the screenshot viewer, or add
-`?review=demo-homepage` to the URL. Use "Back to projects" to return.
-The review ID currently selects the view only; it does not load a screenshot.
-
 ## Add comments
-
-Open a ready review from the developer view first.
 
 1. Click "Choose screenshot" and select a PNG or JPEG image, for example `screenshots/test.png` from the project folder.
 2. Click on the image where you want to leave a comment.
