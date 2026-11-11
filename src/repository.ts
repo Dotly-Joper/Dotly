@@ -20,7 +20,7 @@ export function createProject(db: DatabaseSync, name: string): Project {
 
 export function listProjects(db: DatabaseSync): Project[] {
   return db
-    .prepare("SELECT id, name, created_at FROM projects ORDER BY created_at")
+    .prepare("SELECT id, name, created_at FROM projects ORDER BY created_at DESC")
     .all()
     .map(toProject);
 }
