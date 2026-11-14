@@ -38,6 +38,20 @@ Run from the project root:
 npm run typecheck
 ```
 
+## Backend
+
+Run from the project root, after the screenshot script setup above:
+
+```bash
+npm run server
+```
+
+The server listens on `http://localhost:3000` and restarts when a source file changes.
+The database is created automatically in `data/dotly.db`, and screenshots are saved to `screenshots/<reviewId>.png`.
+
+The API is described in [docs/api.md](docs/api.md).
+Example requests for the VS Code REST Client extension are in [docs/requests.http](docs/requests.http).
+
 ## Review viewer setup
 
 From the project root:
@@ -78,6 +92,6 @@ npm run build
 
 ## Current limitations
 
-- Screenshots are selected manually. The viewer is not yet connected directly to the screenshot script.
-- Comments are stored in memory and are cleared when the page reloads or another image is selected.
+- The viewer is not yet connected to the backend API. Screenshots are selected manually, and projects and reviews are hardcoded examples.
+- In the viewer, comments are stored in memory and are cleared when the page reloads or another image is selected.
 - Known issue: markers may shift relative to the image content when browser zoom changes. This has not yet been resolved.
