@@ -1,8 +1,8 @@
 import express from "express";
-import type { Request, Response } from "express";
-import type { ZodError } from "zod";
+import type { NextFunction, Request, Response } from "express";
 import { captureScreenshot } from "./capture.ts";
 import { openDatabase } from "./db.ts";
+import { NotFoundError, ValidationError } from "./errors.ts";
 import {
   createProject,
   createReview,
@@ -21,20 +21,6 @@ const app = express();
 app.use(express.json());
 app.use("/screenshots", express.static("screenshots"));
 
-function sendValidationError(res: Response, error: ZodError): void {
-  res.status(400).json({
-    error: {
-      code: "VALIDATION_ERROR",
-      message: "Invalid request body",
-      details: error.issues.map(({ path, message }) => ({ path, message })),
-    },
-  });
-}
-
-function sendNotFound(res: Response, message: string): void {
-  res.status(404).json({ error: { code: "NOT_FOUND", message } });
-}
-
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ ok: true });
 });
@@ -43,8 +29,7 @@ app.post("/api/projects", (req: Request, res: Response) => {
   const result = createProjectSchema.safeParse(req.body);
 
   if (!result.success) {
-    sendValidationError(res, result.error);
-    return;
+    throw ValidationError.fromZod(result.error);
   }
 
   res.status(201).json(createProject(db, result.data.name));
@@ -60,15 +45,13 @@ app.post(
     const result = createReviewSchema.safeParse(req.body);
 
     if (!result.success) {
-      sendValidationError(res, result.error);
-      return;
+      throw ValidationError.fromZod(result.error);
     }
 
     const { projectId } = req.params;
 
     if (!getProject(db, projectId)) {
-      sendNotFound(res, "Project not found");
-      return;
+      throw new NotFoundError("Project not found");
     }
 
     const review = createReview(db, projectId, result.data.url);
@@ -95,8 +78,7 @@ app.get(
     const { projectId } = req.params;
 
     if (!getProject(db, projectId)) {
-      sendNotFound(res, "Project not found");
-      return;
+      throw new NotFoundError("Project not found");
     }
 
     res.json(listReviews(db, projectId));
@@ -109,13 +91,36 @@ app.get(
     const review = getReview(db, req.params.reviewId);
 
     if (!review) {
-      sendNotFound(res, "Review not found");
-      return;
+      throw new NotFoundError("Review not found");
     }
 
     res.json(review);
   },
 );
+
+// Express recognises error middleware by its four parameters, so _next must stay.
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof ValidationError) {
+    res.status(400).json({
+      error: {
+        code: "VALIDATION_ERROR",
+        message: err.message,
+        details: err.details,
+      },
+    });
+    return;
+  }
+
+  if (err instanceof NotFoundError) {
+    res.status(404).json({ error: { code: "NOT_FOUND", message: err.message } });
+    return;
+  }
+
+  console.error(err);
+  res.status(500).json({
+    error: { code: "INTERNAL", message: "Internal server error" },
+  });
+});
 
 app.listen(3000, () => {
   console.log("Dotly server listening on http://localhost:3000");
