@@ -1,6 +1,6 @@
 export class ApiError extends Error {
     status: number;
-    code : string;
+    code: string;
 
     constructor(status: number, code: string, message: string) {
         super(message);
@@ -11,13 +11,27 @@ export class ApiError extends Error {
 }
 
 export async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(url, options);
+    let response: Response;
+    try {
+        response = await fetch(url, options);
+    } catch {
+        throw new ApiError(0, "NETWORK", "Could not reach the server. Please try again.");
+    }
+
+    let body;
+    try {
+        body = await response.json();
+    } catch {
+        throw new ApiError(response.status, "NETWORK", "The server returned an invalid response. Please try again.");
+    }
 
     if (!response.ok) {
-        const body = await response.json();
-
-        throw new ApiError(response.status, body.code, body.message);
-    }   
+        throw new ApiError(
+            response.status,
+            typeof body?.error?.code === "string" ? body.error.code : "NETWORK",
+            typeof body?.error?.message === "string" ? body.error.message : "The request failed. Please try again.",
+        );
+    }
     //T describes the type for TypeScript but does not validate JSON at runtime.
-    return await response.json() as T;
+    return body as T;
 }
