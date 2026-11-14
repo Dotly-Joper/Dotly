@@ -4,16 +4,24 @@ import { captureScreenshot } from "./capture.ts";
 import { openDatabase } from "./db.ts";
 import { NotFoundError, ValidationError } from "./errors.ts";
 import {
+  createComment,
   createProject,
   createReview,
   getProject,
   getReview,
+  listComments,
   listProjects,
   listReviews,
   markReviewFailed,
   markReviewReady,
+  updateCommentStatus,
 } from "./repository.ts";
-import { createProjectSchema, createReviewSchema } from "./schemas.ts";
+import {
+  createCommentSchema,
+  createProjectSchema,
+  createReviewSchema,
+  updateCommentSchema,
+} from "./schemas.ts";
 
 const db = openDatabase();
 const app = express();
@@ -95,6 +103,45 @@ app.get(
     }
 
     res.json(review);
+  },
+);
+
+app.get(
+  "/api/reviews/:reviewId/comments",
+  (req: Request<{ reviewId: string }>, res: Response) => {
+    const { reviewId } = req.params;
+
+    if (!getReview(db, reviewId)) {
+      throw new NotFoundError("Review not found");
+    }
+
+    res.json(listComments(db, reviewId));
+  },
+);
+
+app.post(
+  "/api/reviews/:reviewId/comments",
+  (req: Request<{ reviewId: string }>, res: Response) => {
+    const result = createCommentSchema.safeParse(req.body);
+
+    if (!result.success) {
+      throw ValidationError.fromZod(result.error);
+    }
+
+    res.status(201).json(createComment(db, req.params.reviewId, result.data));
+  },
+);
+
+app.patch(
+  "/api/comments/:commentId",
+  (req: Request<{ commentId: string }>, res: Response) => {
+    const result = updateCommentSchema.safeParse(req.body);
+
+    if (!result.success) {
+      throw ValidationError.fromZod(result.error);
+    }
+
+    res.json(updateCommentStatus(db, req.params.commentId, result.data.status));
   },
 );
 
