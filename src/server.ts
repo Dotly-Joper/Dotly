@@ -145,8 +145,25 @@ app.patch(
   },
 );
 
+app.use("/api", () => {
+  throw new NotFoundError("Not found");
+});
+
+// express.json() throws a SyntaxError marked with this type when the body is not valid JSON.
+function isJsonParseError(err: unknown): boolean {
+  return (
+    err instanceof SyntaxError &&
+    "type" in err &&
+    err.type === "entity.parse.failed"
+  );
+}
+
 // Express recognises error middleware by its four parameters, so _next must stay.
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (isJsonParseError(err)) {
+    err = new ValidationError("Request-bodyn är inte giltig JSON.", []);
+  }
+
   if (err instanceof ValidationError) {
     res.status(400).json({
       error: {
