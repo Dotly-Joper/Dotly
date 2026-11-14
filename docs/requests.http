@@ -1,0 +1,69 @@
+@baseUrl = http://localhost:3000
+# Run "createProject" and "createReview" first; the ids are read from their responses.
+@projectId = {{createProject.response.body.id}}
+@reviewId = {{createReview.response.body.id}}
+
+### Health
+GET {{baseUrl}}/api/health
+
+### Create project (201)
+# @name createProject
+POST {{baseUrl}}/api/projects
+Content-Type: application/json
+
+{ "name": "Webbshop" }
+
+### List projects (200, newest first)
+GET {{baseUrl}}/api/projects
+
+### Create review (201, ready, takes a few seconds)
+# @name createReview
+POST {{baseUrl}}/api/projects/{{projectId}}/reviews
+Content-Type: application/json
+
+{ "url": "https://www.wikipedia.org" }
+
+### List project reviews (200, newest first)
+GET {{baseUrl}}/api/projects/{{projectId}}/reviews
+
+### Get review (200)
+GET {{baseUrl}}/api/reviews/{{reviewId}}
+
+### Screenshot for a ready review (200, image)
+GET {{baseUrl}}/screenshots/{{reviewId}}.png
+
+### Error: empty name (400)
+POST {{baseUrl}}/api/projects
+Content-Type: application/json
+
+{ "name": "" }
+
+### Error: name with only spaces (400)
+POST {{baseUrl}}/api/projects
+Content-Type: application/json
+
+{ "name": "   " }
+
+### Error: url "not-a-url" (400)
+POST {{baseUrl}}/api/projects/{{projectId}}/reviews
+Content-Type: application/json
+
+{ "url": "not-a-url" }
+
+### Error: ftp url (400)
+POST {{baseUrl}}/api/projects/{{projectId}}/reviews
+Content-Type: application/json
+
+{ "url": "ftp://example.com" }
+
+### Error: create review for unknown project (404)
+POST {{baseUrl}}/api/projects/does-not-exist/reviews
+Content-Type: application/json
+
+{ "url": "https://www.wikipedia.org" }
+
+### Error: list reviews for unknown project (404)
+GET {{baseUrl}}/api/projects/does-not-exist/reviews
+
+### Error: unknown review (404)
+GET {{baseUrl}}/api/reviews/does-not-exist
