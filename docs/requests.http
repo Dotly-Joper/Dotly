@@ -1,7 +1,8 @@
 @baseUrl = http://localhost:3000
-# Run "createProject" and "createReview" first; the ids are read from their responses.
+# Run "createProject", "createReview" and "createComment" first; the ids are read from their responses.
 @projectId = {{createProject.response.body.id}}
 @reviewId = {{createReview.response.body.id}}
+@commentId = {{createComment.response.body.id}}
 
 ### Health
 GET {{baseUrl}}/api/health
@@ -67,3 +68,97 @@ GET {{baseUrl}}/api/projects/does-not-exist/reviews
 
 ### Error: unknown review (404)
 GET {{baseUrl}}/api/reviews/does-not-exist
+
+### Create comment (201, status open)
+# @name createComment
+POST {{baseUrl}}/api/reviews/{{reviewId}}/comments
+Content-Type: application/json
+
+{ "x": 0.42, "y": 0.18, "text": "Rubriken borde vara större." }
+
+### List comments (200, oldest first)
+GET {{baseUrl}}/api/reviews/{{reviewId}}/comments
+
+### Set comment to resolved (200)
+PATCH {{baseUrl}}/api/comments/{{commentId}}
+Content-Type: application/json
+
+{ "status": "resolved" }
+
+### Set comment back to open (200)
+PATCH {{baseUrl}}/api/comments/{{commentId}}
+Content-Type: application/json
+
+{ "status": "open" }
+
+### Create comment on the edges, x 0 and y 1 (201)
+POST {{baseUrl}}/api/reviews/{{reviewId}}/comments
+Content-Type: application/json
+
+{ "x": 0, "y": 1, "text": "Hörnet längst ner till vänster." }
+
+### Error: empty text (400)
+POST {{baseUrl}}/api/reviews/{{reviewId}}/comments
+Content-Type: application/json
+
+{ "x": 0.5, "y": 0.5, "text": "" }
+
+### Error: text with only spaces (400)
+POST {{baseUrl}}/api/reviews/{{reviewId}}/comments
+Content-Type: application/json
+
+{ "x": 0.5, "y": 0.5, "text": "   " }
+
+### Error: text with 1001 characters (400)
+POST {{baseUrl}}/api/reviews/{{reviewId}}/comments
+Content-Type: application/json
+
+{ "x": 0.5, "y": 0.5, "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }
+
+### Error: x 1.2 (400)
+POST {{baseUrl}}/api/reviews/{{reviewId}}/comments
+Content-Type: application/json
+
+{ "x": 1.2, "y": 0.5, "text": "Utanför bilden." }
+
+### Error: y -0.1 (400)
+POST {{baseUrl}}/api/reviews/{{reviewId}}/comments
+Content-Type: application/json
+
+{ "x": 0.5, "y": -0.1, "text": "Utanför bilden." }
+
+### Error: x as a string (400)
+POST {{baseUrl}}/api/reviews/{{reviewId}}/comments
+Content-Type: application/json
+
+{ "x": "0.5", "y": 0.5, "text": "x är en sträng." }
+
+### Error: status "done" (400)
+PATCH {{baseUrl}}/api/comments/{{commentId}}
+Content-Type: application/json
+
+{ "status": "done" }
+
+### Error: create comment for unknown review (404)
+POST {{baseUrl}}/api/reviews/does-not-exist/comments
+Content-Type: application/json
+
+{ "x": 0.5, "y": 0.5, "text": "Ingen granskning." }
+
+### Error: list comments for unknown review (404)
+GET {{baseUrl}}/api/reviews/does-not-exist/comments
+
+### Error: update unknown comment (404)
+PATCH {{baseUrl}}/api/comments/does-not-exist
+Content-Type: application/json
+
+{ "status": "resolved" }
+
+### Error: invalid JSON (400, details is an empty list)
+POST {{baseUrl}}/api/projects
+Content-Type: application/json
+
+{ "name": 
+
+### Error: unknown path under /api (404)
+GET {{baseUrl}}/api/does-not-exist
