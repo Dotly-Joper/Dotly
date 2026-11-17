@@ -1,6 +1,13 @@
 import type { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
-import type { Project, Review } from "../shared/types.ts";
+import type {
+  CommentStatus,
+  Project,
+  Review,
+  ReviewComment,
+} from "../shared/types.ts";
+import { NotFoundError } from "./errors.ts";
+import type { CreateCommentInput } from "./schemas.ts";
 
 export function createProject(db: DatabaseSync, name: string): Project {
   const project: Project = {
@@ -133,4 +140,86 @@ function toReview(row: Record<string, unknown>): Review {
       throw new Error(`Invalid review status ${String(unexpected)}: ${JSON.stringify(row)}`);
     }
   }
+}
+
+const COMMENT_COLUMNS = "id, review_id, x, y, text, status, created_at";
+
+export function createComment(
+  db: DatabaseSync,
+  reviewId: string,
+  input: CreateCommentInput,
+): ReviewComment {
+  if (!getReview(db, reviewId)) {
+    throw new NotFoundError("Review not found");
+  }
+
+  const comment: ReviewComment = {
+    id: randomUUID(),
+    reviewId,
+    x: input.x,
+    y: input.y,
+    text: input.text,
+    status: "open",
+    createdAt: new Date().toISOString(),
+  };
+
+  db.prepare(
+    `INSERT INTO comments (${COMMENT_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    comment.id,
+    comment.reviewId,
+    comment.x,
+    comment.y,
+    comment.text,
+    comment.status,
+    comment.createdAt,
+  );
+
+  return comment;
+}
+
+export function listComments(db: DatabaseSync, reviewId: string): ReviewComment[] {
+  return db
+    .prepare(
+      // rowid keeps insertion order for comments created in the same millisecond
+      `SELECT ${COMMENT_COLUMNS} FROM comments WHERE review_id = ? ORDER BY created_at ASC, rowid ASC`,
+    )
+    .all(reviewId)
+    .map(toComment);
+}
+
+export function updateCommentStatus(
+  db: DatabaseSync,
+  id: string,
+  status: CommentStatus,
+): ReviewComment {
+  db.prepare("UPDATE comments SET status = ? WHERE id = ?").run(status, id);
+
+  const row = db
+    .prepare(`SELECT ${COMMENT_COLUMNS} FROM comments WHERE id = ?`)
+    .get(id);
+
+  if (!row) {
+    throw new NotFoundError("Comment not found");
+  }
+
+  return toComment(row);
+}
+
+function toComment(row: Record<string, unknown>): ReviewComment {
+  const { id, review_id, x, y, text, status, created_at } = row;
+
+  if (
+    typeof id !== "string" ||
+    typeof review_id !== "string" ||
+    typeof x !== "number" ||
+    typeof y !== "number" ||
+    typeof text !== "string" ||
+    (status !== "open" && status !== "resolved") ||
+    typeof created_at !== "string"
+  ) {
+    throw new Error(`Invalid comment row: ${JSON.stringify(row)}`);
+  }
+
+  return { id, reviewId: review_id, x, y, text, status, createdAt: created_at };
 }
