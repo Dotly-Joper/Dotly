@@ -45,7 +45,7 @@ export interface ReviewComment {
 
 - `imageUrl` finns bara när `status` är `"ready"` och har formen `/screenshots/<reviewId>.png`.
 - `errorMessage` finns bara när `status` är `"failed"`.
-- `x` och `y` är andelar av skärmbildens egen storlek, inte av webbläsarfönstret. För att en markör ska hamna rätt måste frontenden placera markörerna mot en yta som är exakt lika stor som bilden. I nuvarande kod räknas klicket mot bilden, men markörerna placeras mot `#image-stage`, som kan vara bredare än bilden. Det är den kända zoombuggen, och den åtgärdas i frontenden.
+- `x` och `y` är andelar av skärmbildens egen storlek, inte av webbläsarfönstret. För att en markör ska hamna rätt måste frontenden placera markörerna mot en yta som är exakt lika stor som bilden. `#image-stage` har `width: fit-content`, så den är lika stor som bilden, och både klicket och markörerna räknas mot samma yta. Det löste den tidigare zoombuggen.
 
 ## Felformat
 
