@@ -64,6 +64,7 @@ export function renderReviewView(app: HTMLElement, reviewId: string): void {
     comments.forEach((comment, index) => {
       const marker = document.createElement("span");
       marker.className = "comment-marker";
+      marker.classList.toggle("comment-marker-resolved", comment.status === "resolved");
       marker.textContent = String(index + 1);
       marker.style.left = `${comment.x * 100}%`;
       marker.style.top = `${comment.y * 100}%`;
