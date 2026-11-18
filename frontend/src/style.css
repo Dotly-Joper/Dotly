@@ -126,6 +126,10 @@ button:disabled {
   font-weight: bold;
 }
 
+.comment-marker-resolved {
+  background: #667085;
+}
+
 textarea {
   display: block;
   width: 100%;
