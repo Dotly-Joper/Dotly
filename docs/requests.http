@@ -33,6 +33,12 @@ GET {{baseUrl}}/api/reviews/{{reviewId}}
 ### Screenshot for a ready review (200, image)
 GET {{baseUrl}}/screenshots/{{reviewId}}.png
 
+### Create review with spaces around the URL (201, url is returned trimmed)
+POST {{baseUrl}}/api/projects/{{projectId}}/reviews
+Content-Type: application/json
+
+{ "url": "  https://example.com  " }
+
 ### Error: empty name (400)
 POST {{baseUrl}}/api/projects
 Content-Type: application/json

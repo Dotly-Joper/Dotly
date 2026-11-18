@@ -5,7 +5,7 @@ export const createProjectSchema = z.object({
 });
 
 export const createReviewSchema = z.object({
-  url: z.url({ protocol: /^https?$/ }),
+  url: z.string().trim().pipe(z.url({ protocol: /^https?$/ })),
 });
 
 export const createCommentSchema = z.object({
