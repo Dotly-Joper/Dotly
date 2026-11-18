@@ -1,26 +1,13 @@
+import type { Review, ReviewComment } from "../../shared/types";
+import { ApiError, fetchJson } from "./api";
 import { getElement } from "./dom";
+import type { LoadState } from "./state";
 
-type ReviewComment = {
-  id: number;
-  text: string;
-  x: number;
-  y: number;
-};
-
-export function renderReviewView(app: HTMLElement): void {
+export function renderReviewView(app: HTMLElement, reviewId: string): void {
   app.innerHTML = `
     <a href="?">Back to projects</a>
     <h1>Dotly</h1>
-    <p>Choose a screenshot, then click on it to leave a comment.</p>
-
-    <label for="screenshot-input">Choose screenshot</label>
-    <input
-      id="screenshot-input"
-      type="file"
-      accept="image/png,image/jpeg"
-    />
-
-    <p id="status-message">No screenshot selected.</p>
+    <p id="status-message"></p>
 
     <div id="image-container">
       <div id="image-stage">
@@ -29,34 +16,44 @@ export function renderReviewView(app: HTMLElement): void {
       </div>
     </div>
 
+    <p id="comments-error" hidden></p>
+
     <form id="comment-form" hidden>
       <label for="comment-text">Comment</label>
-      <textarea id="comment-text" rows="3" required></textarea>
-      <button type="submit">Save comment</button>
+      <textarea
+        id="comment-text"
+        rows="3"
+        placeholder="Beskriv vad du vill ändra och hur du vill ha det."
+      ></textarea>
+      <p id="form-error" hidden></p>
+      <button id="save-comment" type="submit">Save comment</button>
       <button id="cancel-comment" type="button">Cancel</button>
     </form>
 
     <h2>Comments</h2>
-    <p>Comments are cleared when you reload or choose another image.</p>
     <ol id="comment-list"></ol>
   `;
 
-  const input = getElement<HTMLInputElement>("#screenshot-input");
   const screenshot = getElement<HTMLImageElement>("#screenshot");
   const statusMessage = getElement<HTMLParagraphElement>("#status-message");
   const markers = getElement<HTMLDivElement>("#markers");
+  const commentsError = getElement<HTMLParagraphElement>("#comments-error");
   const form = getElement<HTMLFormElement>("#comment-form");
   const commentText = getElement<HTMLTextAreaElement>("#comment-text");
+  const formError = getElement<HTMLParagraphElement>("#form-error");
+  const saveButton = getElement<HTMLButtonElement>("#save-comment");
   const cancelButton = getElement<HTMLButtonElement>("#cancel-comment");
   const commentList = getElement<HTMLOListElement>("#comment-list");
 
-  let currentImageUrl: string | null = null;
+  let state: LoadState<Review> = { status: "idle" };
   let comments: ReviewComment[] = [];
   let pendingPosition: { x: number; y: number } | null = null;
 
   function closeCommentForm(): void {
     pendingPosition = null;
     commentText.value = "";
+    formError.hidden = true;
+    formError.textContent = "";
     form.hidden = true;
   }
 
@@ -64,10 +61,10 @@ export function renderReviewView(app: HTMLElement): void {
     markers.replaceChildren();
     commentList.replaceChildren();
 
-    for (const comment of comments) {
+    comments.forEach((comment, index) => {
       const marker = document.createElement("span");
       marker.className = "comment-marker";
-      marker.textContent = String(comment.id);
+      marker.textContent = String(index + 1);
       marker.style.left = `${comment.x * 100}%`;
       marker.style.top = `${comment.y * 100}%`;
       markers.append(marker);
@@ -75,44 +72,22 @@ export function renderReviewView(app: HTMLElement): void {
       const item = document.createElement("li");
       item.textContent = comment.text;
       commentList.append(item);
-    }
+    });
   }
 
-  input.addEventListener("change", () => {
-    const file = input.files?.[0];
+  async function loadComments(): Promise<void> {
+    commentsError.hidden = true;
+    commentsError.textContent = "";
 
-    if (!file) {
-      return;
+    try {
+      comments = await fetchJson<ReviewComment[]>(`/api/reviews/${reviewId}/comments`);
+      renderComments();
+    } catch (error) {
+      commentsError.hidden = false;
+      commentsError.textContent =
+        error instanceof Error ? error.message : "Kunde inte hämta kommentarerna.";
     }
-
-    if (file.type !== "image/png" && file.type !== "image/jpeg") {
-      statusMessage.textContent = "Please choose a PNG or JPEG image.";
-      return;
-    }
-
-    if (currentImageUrl) {
-      URL.revokeObjectURL(currentImageUrl);
-    }
-
-    comments = [];
-    renderComments();
-    closeCommentForm();
-
-    currentImageUrl = URL.createObjectURL(file);
-    screenshot.hidden = true;
-    screenshot.src = currentImageUrl;
-    statusMessage.textContent = "Loading screenshot...";
-  });
-
-  screenshot.addEventListener("load", () => {
-    screenshot.hidden = false;
-    statusMessage.textContent = "Click on the screenshot to add a comment.";
-  });
-
-  screenshot.addEventListener("error", () => {
-    screenshot.hidden = true;
-    statusMessage.textContent = "Could not display the selected image.";
-  });
+  }
 
   screenshot.addEventListener("click", (event: MouseEvent) => {
     const bounds = screenshot.getBoundingClientRect();
@@ -122,29 +97,122 @@ export function renderReviewView(app: HTMLElement): void {
       y: (event.clientY - bounds.top) / bounds.height,
     };
 
+    formError.hidden = true;
+    formError.textContent = "";
     form.hidden = false;
     commentText.focus();
   });
 
-  form.addEventListener("submit", (event: SubmitEvent) => {
+  form.addEventListener("submit", async (event: SubmitEvent) => {
     event.preventDefault();
 
-    const text = commentText.value.trim();
-
-    if (!pendingPosition || !text) {
+    if (!pendingPosition) {
       return;
     }
 
-    comments.push({
-      id: comments.length + 1,
-      text,
-      x: pendingPosition.x,
-      y: pendingPosition.y,
-    });
+    const text = commentText.value.trim();
+    const { x, y } = pendingPosition;
 
-    renderComments();
-    closeCommentForm();
+    saveButton.disabled = true;
+    formError.hidden = true;
+    formError.textContent = "";
+
+    try {
+      const created = await fetchJson<ReviewComment>(
+        `/api/reviews/${reviewId}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ x, y, text }),
+        },
+      );
+
+      comments.push(created);
+      renderComments();
+      closeCommentForm();
+    } catch (error) {
+      formError.hidden = false;
+      if (error instanceof ApiError && error.status === 400) {
+        formError.textContent = `Kommentaren kunde inte sparas: ${error.message}`;
+      } else if (error instanceof Error) {
+        formError.textContent = error.message;
+      } else {
+        formError.textContent = "Kommentaren kunde inte sparas.";
+      }
+    } finally {
+      saveButton.disabled = false;
+    }
   });
 
   cancelButton.addEventListener("click", closeCommentForm);
+
+  function render(): void {
+    switch (state.status) {
+      case "idle":
+      case "loading": {
+        screenshot.hidden = true;
+        statusMessage.textContent = "Laddar granskning…";
+        break;
+      }
+      case "error": {
+        screenshot.hidden = true;
+        if (state.error instanceof ApiError && state.error.status === 404) {
+          statusMessage.textContent = "Granskningen hittades inte";
+        } else {
+          statusMessage.textContent = state.error.message;
+        }
+        break;
+      }
+      case "success": {
+        const review = state.data;
+        switch (review.status) {
+          case "ready": {
+            statusMessage.textContent = "";
+            screenshot.src = review.imageUrl;
+            screenshot.hidden = false;
+            void loadComments();
+            break;
+          }
+          case "pending": {
+            screenshot.hidden = true;
+            statusMessage.textContent = "Skärmbilden tas fortfarande.";
+            break;
+          }
+          case "failed": {
+            screenshot.hidden = true;
+            statusMessage.textContent = review.errorMessage;
+            break;
+          }
+          default: {
+            const unreachableReview: never = review;
+            throw new Error(`Unhandled review status: ${String(unreachableReview)}`);
+          }
+        }
+        break;
+      }
+      default: {
+        const unreachable: never = state;
+        throw new Error(`Unhandled load state: ${String(unreachable)}`);
+      }
+    }
+  }
+
+  async function loadReview(): Promise<void> {
+    state = { status: "loading" };
+    render();
+
+    try {
+      const review = await fetchJson<Review>(`/api/reviews/${reviewId}`);
+      state = { status: "success", data: review };
+    } catch (error) {
+      state = {
+        status: "error",
+        error: error instanceof Error ? error : new Error("Kunde inte ladda granskningen."),
+      };
+    }
+
+    render();
+  }
+
+  void loadReview();
 }

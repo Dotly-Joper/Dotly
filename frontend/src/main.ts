@@ -7,7 +7,7 @@ const app = getElement<HTMLDivElement>("#app");
 const reviewId = new URLSearchParams(window.location.search).get("review");
 
 if (reviewId) {
-  renderReviewView(app);
+  renderReviewView(app, reviewId);
 } else {
   renderDeveloperView(app);
 }
