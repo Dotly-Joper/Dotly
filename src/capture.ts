@@ -5,6 +5,7 @@ import { chromium } from "playwright";
 export async function captureScreenshot(
   url: string,
   outputPath: string,
+  { timeoutMs = 30_000 }: { timeoutMs?: number } = {},
 ): Promise<void> {
   await mkdir(dirname(outputPath), { recursive: true });
 
@@ -17,7 +18,7 @@ export async function captureScreenshot(
 
     await page.goto(url, {
       waitUntil: "load",
-      timeout: 30_000,
+      timeout: timeoutMs,
     });
 
     await page.screenshot({

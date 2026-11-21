@@ -2,45 +2,20 @@
 
 Dotly is a prototype for website feedback using screenshots and positioned comments.
 
-## Screenshot script setup
+## Setup
 
 Run from the project root:
 
 ```bash
 npm ci
 npx playwright install chromium
+cd frontend
+npm ci
 ```
 
-## Capture a screenshot
+## Start the app
 
-Run from the project root.
-
-Capture the default example page:
-
-```bash
-npm run dev
-```
-
-Capture a specified page:
-
-```bash
-npm run dev -- "https://example.com"
-```
-
-Screenshots are saved to `screenshots/test.png`.
-Each successful capture overwrites the previous image.
-
-## Type checking
-
-Run from the project root:
-
-```bash
-npm run typecheck
-```
-
-## Backend
-
-Run from the project root, after the screenshot script setup above:
+Start the backend from the project root:
 
 ```bash
 npm run server
@@ -49,49 +24,77 @@ npm run server
 The server listens on `http://localhost:3000` and restarts when a source file changes.
 The database is created automatically in `data/dotly.db`, and screenshots are saved to `screenshots/<reviewId>.png`.
 
-The API is described in [docs/api.md](docs/api.md).
-Example requests for the VS Code REST Client extension are in [docs/requests.http](docs/requests.http).
-
-## Review viewer setup
-
-From the project root:
+Then start the frontend in a second terminal:
 
 ```bash
 cd frontend
-npm ci
 npm run dev
 ```
 
-Open the local URL shown in the terminal.
+Open the local URL shown in the terminal. Vite forwards `/api` and `/screenshots` to the server.
 
-The start page shows the developer view with hardcoded example projects and reviews.
-It includes ready, pending, and failed reviews, plus a project with no reviews.
-Click "Open review" on a ready review to open the screenshot viewer, or add
-`?review=demo-homepage` to the URL. Use "Back to projects" to return.
-The review ID currently selects the view only; it does not load a screenshot.
+The API is described in [docs/api.md](docs/api.md).
+Example requests for the VS Code REST Client extension are in [docs/requests.http](docs/requests.http).
 
-## Add comments
+## Developer view
 
-Open a ready review from the developer view first.
+The start page lists projects and their reviews from the API.
 
-1. Click "Choose screenshot" and select a PNG or JPEG image, for example `screenshots/test.png` from the project folder.
-2. Click on the image where you want to leave a comment.
-3. Enter your comment in the form below the image.
-4. Click "Save comment".
-5. A numbered marker appears on the image, and the comment appears in the list below.
+1. Enter a project name and click "Create project".
+2. In a project, enter a page URL and click "Create review". The server captures a screenshot of the page.
+3. When the review is ready, click "Copy review link" to copy the link for the customer, or "Open review" to open it yourself.
+4. Open "Comments" under a review to see its comments. Click "Mark as resolved" on a comment, or "Reopen" to set it back to open.
 
-Click "Cancel" to close the form without saving.
+## Customer view
 
-## Frontend build
+The review link has the form `?review=<reviewId>`. It shows the screenshot with the comments saved for that review.
+
+1. Click on the screenshot where you want to leave a comment.
+2. Enter your comment in the form below the image.
+3. Click "Save comment". A numbered marker appears on the image, and the comment appears in the list below.
+
+Click "Cancel" to close the form without saving. Saved comments are still there when the page is reloaded.
+
+## Capture a single screenshot
+
+Run from the project root to capture a page without the server:
+
+```bash
+npm run dev -- "https://example.com"
+```
+
+Without a URL, `https://example.com` is captured. The image is saved to `screenshots/test.png` and overwrites the previous one.
+
+## Tests
+
+Run from the project root:
+
+```bash
+npm test
+```
+
+This runs the backend tests in `src/**/*.test.ts` with Vitest, and then the frontend API tests in `frontend/tests/api.test.ts` with the Node test runner.
+The screenshot timeout test (T07) starts a real browser, so Chromium must be installed with `npx playwright install chromium`.
+
+Test cases and results are documented in [docs/tests.md](docs/tests.md).
+
+## Type checking and build
+
+Run from the project root:
+
+```bash
+npm run typecheck
+```
 
 Run from the `frontend` directory:
 
 ```bash
+npx tsc --noEmit
 npm run build
 ```
 
 ## Current limitations
 
-- The viewer is not yet connected to the backend API. Screenshots are selected manually, and projects and reviews are hardcoded examples.
-- In the viewer, comments are stored in memory and are cleared when the page reloads or another image is selected.
-- Known issue: markers may shift relative to the image content when browser zoom changes. This has not yet been resolved.
+- There are no user accounts. Anyone with a review link can view the review and add comments.
+- Dotly only runs locally. It is not deployed anywhere.
+- Comments are not moved to new versions of a page. A new screenshot means a new review without comments.
