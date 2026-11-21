@@ -1,4 +1,4 @@
-import type { Project, Review } from "../../shared/types";
+import type { Project, Review, ReviewComment } from "../../shared/types";
 import { ApiError, fetchJson } from "./api";
 import { getElement } from "./dom";
 import type { LoadState } from "./state";
@@ -210,7 +210,20 @@ function renderReview(review: Review): HTMLLIElement {
       const link = document.createElement("a");
       link.href = `?review=${encodeURIComponent(review.id)}`;
       link.textContent = "Open review";
-      item.append(" ", link);
+      const copyButton = document.createElement("button");
+      copyButton.type = "button";
+      copyButton.textContent = "Copy review link";
+      const copyMessage = document.createElement("p");
+      copyMessage.setAttribute("role", "status");
+      copyButton.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(link.href);
+          copyMessage.textContent = "Review link copied.";
+        } catch {
+          copyMessage.textContent = "Could not copy the review link.";
+        }
+      });
+      item.append(" ", link, " ", copyButton, copyMessage, createReviewComments(review.id));
       break;
     }
     case "pending":
@@ -228,5 +241,79 @@ function renderReview(review: Review): HTMLLIElement {
       throw new Error(`Unknown review status: ${unreachable}`);
     }
   }
+  return item;
+}
+
+function createReviewComments(reviewId: string): HTMLDetailsElement {
+  const details = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = "Comments";
+  const message = document.createElement("p");
+  message.setAttribute("role", "status");
+  const list = document.createElement("ul");
+  details.append(summary, message, list);
+  let loading = false;
+  let loaded = false;
+
+  details.addEventListener("toggle", async () => {
+    if (!details.open || loading || loaded) return;
+    loading = true;
+    message.textContent = "Loading comments…";
+    try {
+      const comments = await fetchJson<ReviewComment[]>(
+        `/api/reviews/${encodeURIComponent(reviewId)}/comments`,
+      );
+      list.replaceChildren(...comments.map(renderComment));
+      message.textContent = comments.length === 0 ? "No comments yet." : "";
+      loaded = true;
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Could not load comments.";
+      message.textContent = `${reason} Close and reopen Comments to try again.`;
+    } finally {
+      loading = false;
+    }
+  });
+
+  return details;
+}
+
+function renderComment(comment: ReviewComment): HTMLLIElement {
+  const item = document.createElement("li");
+  const text = document.createElement("p");
+  text.textContent = comment.text;
+  const date = document.createElement("time");
+  date.dateTime = comment.createdAt;
+  date.textContent = new Date(comment.createdAt).toLocaleString();
+  const status = document.createElement("span");
+  const button = document.createElement("button");
+  button.type = "button";
+  const errorMessage = document.createElement("p");
+  errorMessage.setAttribute("role", "alert");
+  item.append(text, date, " ", status, " ", button, errorMessage);
+
+  function renderStatus(): void {
+    status.textContent = comment.status === "resolved" ? "Resolved" : "Open";
+    button.textContent = comment.status === "resolved" ? "Reopen" : "Mark as resolved";
+  }
+
+  button.addEventListener("click", async () => {
+    if (button.disabled) return;
+    button.disabled = true;
+    errorMessage.textContent = "";
+    try {
+      comment = await fetchJson<ReviewComment>(`/api/comments/${encodeURIComponent(comment.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: comment.status === "resolved" ? "open" : "resolved" }),
+      });
+      renderStatus();
+    } catch (error) {
+      errorMessage.textContent = error instanceof Error ? error.message : "Could not update comment.";
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  renderStatus();
   return item;
 }
