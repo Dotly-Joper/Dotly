@@ -204,7 +204,7 @@ Svar: 200 med den uppdaterade `ReviewComment`. Fel: 400 vid annan status, 404 om
 ## Statiska filer
 
 - `GET /screenshots/<reviewId>.png`: skärmbilden, serverad med `express.static`. En bild som saknas ger Express vanliga 404, inte felformatet.
-- `GET /test-site/`: en egen testsida för pilottestet (byggs senare).
+- `GET /test-site/`: en egen testsida för pilottestet, en statisk HTML-fil i `test-site/index.html` serverad med `express.static`. Sidan har ingen JavaScript och inga externa resurser, så skärmbilden blir likadan varje gång.
 
 ## Begränsningar
 

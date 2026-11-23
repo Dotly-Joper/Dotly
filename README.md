@@ -55,6 +55,13 @@ The review link has the form `?review=<reviewId>`. It shows the screenshot with 
 
 Click "Cancel" to close the form without saving. Saved comments are still there when the page is reloaded.
 
+## Pilot test site
+
+`test-site/index.html` is a static page for a made-up café, used in the pilot test. It has no JavaScript and no external resources, so every screenshot of it looks the same.
+The server serves it, so `npm run server` must be running. Open it at `http://localhost:3000/test-site/`.
+
+To review it, create a project in the developer view and enter `http://localhost:3000/test-site/` as the page URL.
+
 ## Capture a single screenshot
 
 Run from the project root to capture a page without the server:

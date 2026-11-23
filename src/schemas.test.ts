@@ -39,7 +39,11 @@ describe("T04: review URL, comment status and project name", () => {
     expect(createReviewSchema.safeParse({ url }).success).toBe(false);
   });
 
-  it.each(["https://example.com", " https://example.com "])("accepts URL %j", (url) => {
+  it.each([
+    "https://example.com",
+    " https://example.com ",
+    "http://localhost:3000/test-site/",
+  ])("accepts URL %j", (url) => {
     expect(createReviewSchema.safeParse({ url }).success).toBe(true);
   });
 

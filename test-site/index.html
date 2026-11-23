@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Kafé Kanelen</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: #2b2118; background: #fbf6ef; }
+  .container { width: 1200px; margin: 0 auto; }
+
+  .site-header { height: 88px; background: #2b2118; color: #fbf6ef; }
+  .site-header .container { height: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 28px; font-weight: bold; letter-spacing: 1px; }
+  .main-nav a { color: #fbf6ef; text-decoration: none; font-size: 18px; margin-left: 40px; }
+
+  .hero { height: 560px; background: #e9d8c3; display: flex; align-items: center; text-align: center; }
+  .hero h1 { font-size: 64px; margin: 0 0 24px; }
+  .hero p { font-size: 22px; margin: 0 0 40px; }
+  .hero-buttons { display: flex; justify-content: center; gap: 24px; }
+  .btn { display: inline-block; width: 220px; padding: 18px 0; background: #8a4b2a; color: #fff; font-size: 20px; text-decoration: none; border-radius: 6px; }
+
+  .section { padding: 80px 0; }
+  .section h2 { font-size: 40px; margin: 0 0 32px; }
+  .section p { font-size: 20px; line-height: 1.6; margin: 0 0 16px; }
+  .split { display: flex; gap: 64px; align-items: center; }
+  .split .text { flex: 1; }
+  .image { width: 480px; height: 320px; display: block; border-radius: 8px; }
+  .section-alt { background: #f3e9dc; }
+
+  .contact-form { width: 640px; }
+  .contact-form label { display: block; font-size: 18px; margin: 0 0 8px; }
+  .contact-form input, .contact-form textarea { display: block; width: 100%; font: inherit; font-size: 18px; padding: 12px; margin: 0 0 24px; border: 1px solid #b9a48c; border-radius: 4px; background: #fff; }
+  .contact-form textarea { height: 140px; resize: none; }
+  .contact-form button { font: inherit; font-size: 20px; padding: 16px 48px; background: #2b2118; color: #fff; border: 0; border-radius: 6px; }
+
+  .site-footer { height: 120px; background: #2b2118; color: #d9c8b3; display: flex; align-items: center; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<header class="site-header" id="header">
+  <div class="container">
+    <div class="logo" id="logo">Kafé Kanelen</div>
+    <nav class="main-nav" id="main-nav">
+      <a href="#om-oss" id="nav-om-oss">Om oss</a>
+      <a href="#fika" id="nav-fika">Fika</a>
+      <a href="#kontakt" id="nav-kontakt">Kontakt</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" id="hero">
+  <div class="container">
+    <h1 id="hero-title">Nybakat varje morgon</h1>
+    <p id="hero-text">Kaffe, kanelbullar och lugn i hjärtat av Gamla stan.</p>
+    <div class="hero-buttons">
+      <a class="btn" id="btn-boka" href="#kontakt">Boka bord</a>
+      <a class="btn" id="btn-meny" href="#fika">Se menyn</a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="om-oss">
+  <div class="container split">
+    <div class="text">
+      <h2 id="rubrik-om-oss">Om oss</h2>
+      <p>Kafé Kanelen öppnade 2012 i ett gammalt bageri. Vi bakar allt själva i köket bakom disken.</p>
+      <p>Hos oss får du ta god tid på dig. Det finns plats för både en snabb kopp och en lång eftermiddag.</p>
+    </div>
+    <svg class="image" id="bild-1" viewBox="0 0 480 320" role="img" aria-label="Illustration av en kaffekopp">
+      <rect width="480" height="320" fill="#c9733f"/>
+      <circle cx="240" cy="160" r="90" fill="#fbf6ef"/>
+      <circle cx="240" cy="160" r="60" fill="#6b3b1f"/>
+    </svg>
+  </div>
+</section>
+
+<section class="section section-alt" id="fika">
+  <div class="container split">
+    <div class="text">
+      <h2 id="rubrik-fika">Vår fika</h2>
+      <p>Kanelbullar, kardemummabullar och kladdkaka. Varje dag finns också en vegansk kaka.</p>
+      <p>Kaffet rostas i Stockholm, och teet kommer från ett litet tehus i Uppsala.</p>
+    </div>
+    <svg class="image" id="bild-2" viewBox="0 0 480 320" role="img" aria-label="Illustration av en tekopp">
+      <rect width="480" height="320" fill="#5f8a6b"/>
+      <circle cx="240" cy="160" r="90" fill="#fbf6ef"/>
+      <circle cx="240" cy="160" r="60" fill="#a4703a"/>
+    </svg>
+  </div>
+</section>
+
+<section class="section" id="kontakt">
+  <div class="container">
+    <h2 id="rubrik-kontakt">Kontakt</h2>
+    <form class="contact-form" id="kontaktformular">
+      <label for="namn">Namn</label>
+      <input type="text" id="namn" name="namn">
+      <label for="epost">E-post</label>
+      <input type="email" id="epost" name="epost">
+      <label for="meddelande">Meddelande</label>
+      <textarea id="meddelande" name="meddelande"></textarea>
+      <button type="submit" id="btn-skicka">Skicka</button>
+    </form>
+  </div>
+</section>
+
+<footer class="site-footer" id="footer">
+  <div class="container">Kafé Kanelen · Stora Nygatan 1, Stockholm · Öppet alla dagar 8–18</div>
+</footer>
+
+</body>
+</html>
