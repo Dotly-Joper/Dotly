@@ -17,6 +17,20 @@ T01, T03, T04, T06 och T07 testades 2026-11-21 på branchen `test/backend`, med 
 
 Filen ligger kvar med kommentaren. Om `"done"` någon gång blir en giltig status blir kommentaren oanvänd och typkontrollen misslyckas.
 
+## T02: Det typkontrollen inte hittar
+
+Testat 2026-11-27 på `28baa1a` med TypeScript 7.0.2.
+
+### Metod
+
+I `frontend/src/developer-view.ts` testades `fetchJson<Project[]>("/api/projects")` utan `await` på två sätt. Första gången försökte koden läsa `projects.length` direkt efter anropet. Andra gången fick anropet stå för sig självt. Typkontrollen kördes med `npx.cmd tsc --noEmit` från `frontend` efter varje ändring och en sista gång när testkoden hade tagits bort.
+
+### Resultat
+
+När koden försökte läsa `projects.length` utan `await` gav typkontrollen fel och avslutades med kod 1. `projects` var då en `Promise`, så det gick inte att läsa listans längd direkt. Felmeddelandet var `src/developer-view.ts(70,79): error TS2339: Property 'length' does not exist on type 'Promise<Project[]>'.`
+
+När anropet fick stå för sig självt utan `await` gick typkontrollen igenom med kod 0. Det gjorde den också efter att testkoden togs bort. Alla tre körningar gav det väntade resultatet.
+
 ## T03: Kommentartext och koordinater valideras
 
 ### Metod
