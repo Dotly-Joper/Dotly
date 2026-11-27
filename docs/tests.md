@@ -145,3 +145,55 @@ På vissa nät avvisas adressen direkt i stället för efter timeout. Testet god
 | Körning av alla Vitest-tester | Fel inom tidsgränsen, ingen hängning | `TimeoutError: page.goto: Timeout 3000ms exceeded.` efter 3 464 ms | Ja |
 
 På det här nätet gick anropet till timeout och avvisades inte direkt. Kräver `npx playwright install chromium`.
+
+## T08: Pilottest av tydlig feedback
+
+Testat 2026-11-27 på main `28baa1a`.
+
+### Metod
+
+Alper Eken och Josef Zakaria satt tillsammans i skolan och använde samma dator. Testet kördes i två omgångar, och personerna bytte roll mellan dem. Kunden markerade ändringar i Dotly. Utvecklaren läste kommentarerna och sa var på sidan ändringen gällde och vad som skulle ändras.
+
+| Omgång | Kund | Utvecklare | Sida |
+| --- | --- | --- | --- |
+| 1 | Alper | Josef | Testsidan Kafé Kanelen, `http://localhost:3000/test-site/` |
+| 2 | Josef | Alper | `https://www.mormorskunafa.se/` |
+
+Båda omgångarna gjordes med Dotly. Ingen omgång gjordes med bara text, så det finns ingen baseline att jämföra med.
+
+För varje omgång antecknades:
+
+- Rätt plats: hittade utvecklaren rätt ställe på sidan (ja/nej).
+- Förstod ändringen: förstod utvecklaren vad som skulle ändras (ja/delvis/nej).
+- Frågor under testet: frågor som ställdes under omgången.
+- Tid: tiden för omgången, antecknad i minuter och sekunder.
+
+### Resultat
+
+| Omgång | Kund | Utvecklare | Markerade ändringar | Rätt plats | Förstod ändringen | Frågor under testet | Tid |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Alper | Josef | Cirkeln inuti den gröna rektangeln, knappen "Se meny" | Ja | Ja | 1: "Vad ska jag skriva?" | 1 min 7 s (67 s) |
+| 2 | Josef | Alper | Bilden längst upp som saknas, de två tomma kartorna (butiken har två lokaler) | Ja | Ja | 1: "Ska jag lägga på båda?" | 1 min 34 s (94 s) |
+
+### Sammanställning
+
+| Villkor | Omgångar | Rätt plats | Förstod: ja / delvis / nej | Frågor totalt | Median tid |
+| --- | --- | --- | --- | --- | --- |
+| Dotly | 2 | 2 av 2 | 2 / 0 / 0 | 2 | 80,5 s |
+
+Mediantiden räknades så här: tiderna i ordning är 67 s och 94 s. Med ett jämnt antal värden är medianen medelvärdet av de två mittersta, (67 + 94) / 2 = 80,5 s.
+
+### Iakttagelser
+
+| Omgång | Kund | Iakttagelse | Förslag från deltagarna |
+| --- | --- | --- | --- |
+| 1 | Alper | En kommentar som markerats som löst visas i kundvyn bara som en grå markör. Listan under bilden visar inte om kommentaren är öppen eller löst. | Visa status i listan under bilden. |
+| 1 | Alper | Kommentarens text syns inte vid markören. | Visa kommentaren och dess status när man håller musen över markören. |
+| 2 | Josef | Formuläret för att skriva ligger under bilden, så man ser inte stället man klickade på medan man skriver. | En liten skrivruta vid klickstället. Den sparade kommentaren visas sedan i listan längst ner. |
+| 2 | Josef | Samma ändring gällde två ställen på sidan, kartorna för butikens två lokaler. Kunden frågade om båda skulle markeras. | Kunna gruppera markeringar som gäller samma sak. |
+
+### Begränsningar
+
+- Deltagarna var två personer som själva har byggt verktyget.
+- Testet hade två omgångar, båda med Dotly och utan baseline.
+- Omgångarna använde olika sidor. Omgång 2 använde en publik webbplats, som kan se annorlunda ut vid ett senare tillfälle.

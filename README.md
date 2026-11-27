@@ -105,3 +105,4 @@ npm run build
 - There are no user accounts. Anyone with a review link can view the review and add comments.
 - Dotly only runs locally. It is not deployed anywhere.
 - Comments are not moved to new versions of a page. A new screenshot means a new review without comments.
+- In the customer view, a resolved comment is only shown as a grey marker. The comment list does not show whether a comment is open or resolved.
